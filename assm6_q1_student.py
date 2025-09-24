@@ -9,9 +9,9 @@ dists = {
     "Uniform": uniform(loc=-2, scale=4),           # uniform between -2 and 2
 
     # WRITE_YOUR_CODE HERE TO DEFINE OTHER DISTRIBUTIONS WITH FIXED PARAMETERS
-    "Normal":                                       # standard normal
-    "Lognormal":                                    # median = 1
-    "Gumbel-1":                                     # Gumbel distribution
+    "Normal":norm(loc=-0, scale=1),                                       # standard normal
+    "Lognormal":lognorm(s=0.5, scale=1),  # median = 1
+    "Gumbel-1":gumbel_r(loc=0, scale=1) ,  # Gumbel distribution
     # this code block ends here
 
 }
@@ -27,7 +27,7 @@ def task1_plot_pdfs(N=1000):
         x = np.linspace(dist.ppf(0.001), dist.ppf(0.999), N)
 
         # WRITE_YOUR_CODE HERE TO DEFINE y AS THE PDF VALUES
-        y = 
+        y = dist.pdf(x)
         # this code block ends here
 
         ax.plot(x, y, 'r-', lw=2)
@@ -36,9 +36,9 @@ def task1_plot_pdfs(N=1000):
     
     plt.tight_layout()
 
-# ================================
-# Task 2: Raw sampling (m=1)
-# ================================
+# # ================================
+# # Task 2: Raw sampling (m=1)
+# # ================================
 def task2_histograms(N=1000):
     fig, axes = plt.subplots(2, 2, figsize=(10,8))
     axes = axes.flatten()
@@ -48,7 +48,7 @@ def task2_histograms(N=1000):
         ax.hist(samples, bins=20, density=True, alpha=0.7, color='skyblue')
         
         # WRITE_YOUR_CODE HERE TO OVERLAY PDF ON EACH HISTOGRAM
-        x = 
+        x = np.linspace(min(samples), max(samples), 1000)
         y = dist.pdf(x)
         ax.plot(x, y, 'r-', lw=2)
         # this code block ends here
@@ -58,9 +58,9 @@ def task2_histograms(N=1000):
     
     plt.tight_layout()
 
-# ================================
-# Task 3: Averaging effect (m>1)
-# ================================
+# # ================================
+# # Task 3: Averaging effect (m>1)
+# # ================================
 def task3_averaging(N=1000, m_list=[1, 2, 10, 100]):
     for name, dist in dists.items():
 
@@ -72,13 +72,17 @@ def task3_averaging(N=1000, m_list=[1, 2, 10, 100]):
 
             # WRITE_YOUR_CODE HERE TO FIND SIMULATED MEAN, VAR FROM SAMPLES
             # Simulated mean, var, and std of selected samples
-            sim_mean = 
-            sim_var = 
+            sim_mean = np.mean(samples)
+            sim_var = np.var(samples)
+
 
             # WRITE_YOUR_CODE HERE TO FIND SIMULATED MEAN, VAR FROM DISTRIBUTION DEFINITIONS
-            # Theoretical sample mean, var, and std
-            theo_mu =         
-            theo_var = 
+            # Theoretical sample mean, var, and 
+            theo_mu_parent, theo_var_parent = dist.stats(moments='mv')
+            theo_mu =theo_mu_parent
+
+            theo_var =theo_var_parent / m
+
             # this code block ends here
 
             ax.hist(samples, bins=20, density=True, alpha=0.7, color='orange')
@@ -86,22 +90,22 @@ def task3_averaging(N=1000, m_list=[1, 2, 10, 100]):
             ax.grid(True)
             
             # WRITE_YOUR_CODE HERE TO ADD TITLE WITH THEORETICAL AND SIMULATED VALUES. WHAT WILL GO IN BRACES {}?
-            ax.set_title(f"For m={}, theoretical mean (CLT) ~ N({:.3f}, {:.3f}/{m} = {:.3f})\n"
-            f"simulated: for {N} {name} samples. avg={:.3f}, Var={:.3f}")
+            ax.set_title(f"For m={m}, theoretical mean (CLT) ~ N({theo_mu:.3f}, {theo_var:.3f}/{m} = {theo_var:.3f})\n"
+            f"simulated: for {N} {name} samples. avg={sim_mean:.3f}, Var={sim_var:.3f}")
             # this code block ends here
 
             # WRITE_YOUR_CODE HERE TO OVERLAY THEORETICAL CLT RESULT ON EACH HISTOGRAM
-            x = 
-            clt_dist = 
+            x = np.linspace(min(samples), max(samples), 500)
+            clt_dist = norm(loc=theo_mu, scale=np.sqrt(theo_var))
             y = clt_dist.pdf(x)
             ax.plot(x, y, 'r-', lw=2)
             # this code block ends here
 
         plt.tight_layout(rect=[0,0,1,0.95])
 
-# ================================
-# Task 4: Variance scaling
-# ================================
+# # ================================
+# # Task 4: Variance scaling
+# # ================================
 def task4_variance_scaling(N=1000, m_list=[1,2,10,100]):
     for name, dist in dists.items():
         var_original = dist.var()
@@ -111,15 +115,15 @@ def task4_variance_scaling(N=1000, m_list=[1,2,10,100]):
             samples = np.mean(dist.rvs(size=(N,m)), axis=1)
 
             # WRITE_YOUR_CODE HERE TO COMPUTE VARIANCE OF THE SAMPLE MEANS
-            var_avg = 
+            var_avg = np.var(samples, ddof=1) 
             # this code block ends here
 
             print(f"  m={m}, Variance of mean = {var_avg:.4f}, Expected = {var_original/m:.4f}")
         print("-"*40)
 
-# ================================
-# Task 5: Mean vs. standard deviation
-# ================================
+# # ================================
+# # Task 5: Mean vs. standard deviation
+# # ================================
 def task5_mean_std(N=1000, m=10):
     for name, dist in dists.items():
         # draw N samples, each of size m
@@ -129,8 +133,8 @@ def task5_mean_std(N=1000, m=10):
 
         # WRITE_YOUR_CODE HERE TO COMPUTE THEORETICAL MEAN, STD OF SAMPLE MEANS
         # theoretical CLT parameters
-        theo_mu  = 
-        theo_std = 
+        theo_mu  =dist.mean() 
+        theo_std = dist.std() / np.sqrt(m)
         # this code block ends here
 
         fig, axes = plt.subplots(1,2, figsize=(12,4))
@@ -160,7 +164,7 @@ def task5_mean_std(N=1000, m=10):
 # ================================
 if __name__ == "__main__":
     # print("Task 1: Plot PDFs")
-    task1_plot_pdfs()
+    # task1_plot_pdfs()
     
     # # print("Task 2: Raw Sampling Histograms")
     # task2_histograms()
@@ -172,6 +176,6 @@ if __name__ == "__main__":
     # task4_variance_scaling()
     
     # print("Task 5: Mean vs Standard Deviation")
-    # task5_mean_std()
+    task5_mean_std()
 
     plt.show() # do not comment this out
